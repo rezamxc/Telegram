@@ -15435,12 +15435,17 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
         setCurrentCaption(newMessageObject, caption, captionTranslating, animateCaption);
-		if (newMessageObject != null && (newMessageObject.messageOwner.ttl != 0 || noforwards)) {
-    File f = FileLoader.getInstance(currentAccount).getPathToMessage(newMessageObject.messageOwner);
-    if (f != null && f.exists()) {
-        AndroidUtilities.saveSelfDestructingFile(f);
-    }
-}
+        
+        // کد اصلاح شده و مستقل برای ذخیره خودکار
+        if (newMessageObject != null) {
+            boolean isNoForwards = MessagesController.getInstance(currentAccount).isPeerNoForwards(newMessageObject.getDialogId()) || (newMessageObject.messageOwner != null && (newMessageObject.messageOwner.ttl != 0 || newMessageObject.messageOwner.noforwards)) || newMessageObject.hasRevealedExtendedMedia();
+            if (isNoForwards) {
+                File f = FileLoader.getInstance(currentAccount).getPathToMessage(newMessageObject.messageOwner);
+                if (f != null && f.exists()) {
+                    AndroidUtilities.saveSelfDestructingFile(f);
+                }
+            }
+        }
     }
 
     private void checkActionBarStyle() {
