@@ -232,7 +232,7 @@ public class SharedConfig {
     public static int autoLockIn = 60 * 60;
 
     public static boolean saveIncomingPhotos;
-    public static boolean allowScreenCapture;
+    public static boolean allowScreenCapture = true;
     public static int lastPauseTime;
     public static boolean isWaitingForPasscodeEnter;
     public static boolean useFingerprintLock = true;
@@ -443,7 +443,7 @@ public class SharedConfig {
                 editor.putInt("autoLockIn", autoLockIn);
                 editor.putInt("lastPauseTime", lastPauseTime);
                 editor.putBoolean("useFingerprint", useFingerprintLock);
-                editor.putBoolean("allowScreenCapture", allowScreenCapture);
+                editor.putBoolean("allowScreenCapture", true);
                 editor.putString("pushString2", pushString);
                 editor.putInt("pushType", pushType);
                 editor.putBoolean("pushStatSent", pushStatSent);
