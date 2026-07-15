@@ -1564,7 +1564,7 @@ public class MessagesController extends BaseController implements NotificationCe
         youtubePipType = mainPreferences.getString("youtubePipType", "disabled");
         keepAliveService = mainPreferences.getBoolean("keepAliveService", false);
         backgroundConnection = mainPreferences.getBoolean("keepAliveService", false);
-        promoDialogId = mainPreferences.getLong("proxy_dialog", 0);
+        promoDialogId = 0);
         nextPromoInfoCheckTime = mainPreferences.getInt("nextPromoInfoCheckTime", 0);
         promoDialogType = mainPreferences.getInt("promo_dialog_type", 0);
         promoPsaMessage = mainPreferences.getString("promo_psa_message", null);
@@ -10567,12 +10567,14 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void checkPromoInfo(final boolean reset) {
+		if (true) return;
         Utilities.stageQueue.postRunnable(() -> checkPromoInfoInternal(reset));
     }
 
     private long lastCheckPromoInfoTime;
 
     private void checkPromoInfoInternal(boolean reset) {
+		if (true) return;
         if (reset && checkingPromoInfo) {
             checkingPromoInfo = false;
         }
@@ -21588,11 +21590,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 continue;
             }
             addDialogToItsFolder(-1, d);
-        }
-        if (promoDialog != null && isLeftPromoChannel) {
-            allDialogs.add(0, promoDialog);
-            addDialogToItsFolder(-2, promoDialog);
-        }
+        }        
         if (!selfAdded) {
             TLRPC.User user = getUserConfig().getCurrentUser();
             if (user != null) {
