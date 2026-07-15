@@ -28,7 +28,7 @@ jobs:
       - name: Build Telegram
         run: |
           cd TMessagesProj
-          ../gradlew assembleAfatDebug
+          ../gradlew tasks --all
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
