@@ -18,6 +18,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle' # فعال‌سازی کش گریدل برای افزایش سرعت بیلدهای بعدی
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -25,7 +26,7 @@ jobs:
       - name: Grant permission
         run: chmod +x gradlew
 
-      - name: Build Telegram
+      - name: Build Telegram APK
         run: |
           ./gradlew :TMessagesProj_AppHuawei:assembleAfatDebug --stacktrace
 
