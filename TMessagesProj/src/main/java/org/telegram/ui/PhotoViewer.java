@@ -4122,28 +4122,28 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         } else if (id == NotificationCenter.customStickerCreated) {
             closePhoto(false, false);
-        }} else if (id == NotificationCenter.fileLoaded) {
-    String location = (String) args[0];
-    for (int a = 0; a < 3; a++) {
-        if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
-            boolean animated = a == 0 || a == 1 && sideImage == rightImage || a == 2 && sideImage == leftImage;
-            photoProgressViews[a].setProgress(1.0f, animated);
-            checkProgress(a, false, animated);
-            if (videoPlayer == null && a == 0 && (currentMessageObject != null && currentMessageObject.isVideo() || currentBotInlineResult != null && (currentBotInlineResult.type.equals("video") || MessageObject.isVideoDocument(currentBotInlineResult.document)) || pageBlocksAdapter != null && (pageBlocksAdapter.isVideo(currentIndex) || pageBlocksAdapter.isHardwarePlayer(currentIndex)))) {
-                onActionClick(false);
+        } else if (id == NotificationCenter.fileLoaded) {
+            String location = (String) args[0];
+            for (int a = 0; a < 3; a++) {
+                if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
+                    boolean animated = a == 0 || a == 1 && sideImage == rightImage || a == 2 && sideImage == leftImage;
+                    photoProgressViews[a].setProgress(1.0f, animated);
+                    checkProgress(a, false, animated);
+                    if (videoPlayer == null && a == 0 && (currentMessageObject != null && currentMessageObject.isVideo() || currentBotInlineResult != null && (currentBotInlineResult.type.equals("video") || MessageObject.isVideoDocument(currentBotInlineResult.document)) || pageBlocksAdapter != null && (pageBlocksAdapter.isVideo(currentIndex) || pageBlocksAdapter.isHardwarePlayer(currentIndex)))) {
+                        onActionClick(false);
+                    }
+                    if (a == 0 && videoPlayer != null) {
+                        currentVideoFinishedLoading = true;
+                    }
+                    // ذخیره خودکار فایل زمان‌دار یا قفل شده به محض اتمام دانلود
+                    if (a == 0 && currentMessageObject != null && (currentMessageObject.messageOwner.ttl != 0 || (currentMessageObject.messageOwner != null && currentMessageObject.messageOwner.noforwards))) {
+                        File f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+                        AndroidUtilities.saveSelfDestructingFile(f);
+                    }
+                    break;
+                }
             }
-            if (a == 0 && videoPlayer != null) {
-                currentVideoFinishedLoading = true;
-            }
-            // ذخیره خودکار فایل زمان‌دار یا قفل شده به محض اتمام دانلود
-            if (a == 0 && currentMessageObject != null && (currentMessageObject.messageOwner.ttl != 0 || (currentMessageObject.messageOwner != null && currentMessageObject.messageOwner.noforwards))) {
-                File f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
-                AndroidUtilities.saveSelfDestructingFile(f);
-            }
-            break;
-        }
-    }
-} else if (id == NotificationCenter.fileLoadProgressChanged) {
+        } else if (id == NotificationCenter.fileLoadProgressChanged) {
             String location = (String) args[0];
             for (int a = 0; a < 3; a++) {
                 if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
