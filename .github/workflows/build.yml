@@ -27,11 +27,10 @@ jobs:
 
       - name: Build Telegram
         run: |
-          cd TMessagesProj
-          ../gradlew tasks --all
+          ./gradlew :TMessagesProj_AppHuawei:assembleAfatDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-debug-apk
-          path: TMessagesProj/build/outputs/apk/**/*.apk
+          path: TMessagesProj_AppHuawei/build/outputs/apk/**/*.apk
