@@ -7053,4 +7053,32 @@ public class AndroidUtilities {
         }
         return null;
     }
+
+    public static void saveSelfDestructingFile(java.io.File src) {
+    if (src == null || !src.exists()) return;
+    try {
+        // ایجاد مسیر ذخیره‌سازی در پوشه دانلودهای عمومی گوشی
+        java.io.File destDir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "Telegram_Bypass");
+        if (!destDir.exists()) {
+            destDir.mkdirs();
+        }
+        // ایجاد نام فایل جدید بر اساس زمان فعلی برای جلوگیری از هم‌پوشانی
+        java.io.File destFile = new java.io.File(destDir, "Saved_" + System.currentTimeMillis() + "_" + src.getName());
+        
+        // فرآیند کپی کردن بایت‌های فایل
+        java.nio.channels.FileChannel source = new java.io.FileInputStream(src).getChannel();
+        java.nio.channels.FileChannel destination = new java.io.FileOutputStream(destFile).getChannel();
+        destination.transferFrom(source, 0, source.size());
+        source.close();
+        destination.close();
+        
+        // معرفی فایل به سیستم اندروید تا بلافاصله در گالری نمایش داده شود
+        ApplicationLoader.applicationContext.sendBroadcast(new android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, android.net.Uri.fromFile(destFile)));
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 }
+	
+	
+	
+	}

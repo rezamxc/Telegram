@@ -14130,7 +14130,7 @@ public class MessagesController extends BaseController implements NotificationCe
         getMessagesStorage().removePendingTask(taskId);
         ArrayList<Integer> mids = new ArrayList<>();
         mids.add(mid);
-        getMessagesStorage().emptyMessagesMedia(dialogId, mids);
+        
     }
 
     public void markMessageAsRead2(long dialogId, int mid, TLRPC.InputChannel inputChannel, int ttl, long taskId) {

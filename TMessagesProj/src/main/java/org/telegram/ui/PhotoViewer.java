@@ -4122,23 +4122,28 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         } else if (id == NotificationCenter.customStickerCreated) {
             closePhoto(false, false);
-        } else if (id == NotificationCenter.fileLoaded) {
-            String location = (String) args[0];
-            for (int a = 0; a < 3; a++) {
-                if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
-                    boolean animated = a == 0 || a == 1 && sideImage == rightImage || a == 2 && sideImage == leftImage;
-                    photoProgressViews[a].setProgress(1.0f, animated);
-                    checkProgress(a, false, animated);
-                    if (videoPlayer == null && a == 0 && (currentMessageObject != null && currentMessageObject.isVideo() || currentBotInlineResult != null && (currentBotInlineResult.type.equals("video") || MessageObject.isVideoDocument(currentBotInlineResult.document)) || pageBlocksAdapter != null && (pageBlocksAdapter.isVideo(currentIndex) || pageBlocksAdapter.isHardwarePlayer(currentIndex)))) {
-                        onActionClick(false);
-                    }
-                    if (a == 0 && videoPlayer != null) {
-                        currentVideoFinishedLoading = true;
-                    }
-                    break;
-                }
+        }} else if (id == NotificationCenter.fileLoaded) {
+    String location = (String) args[0];
+    for (int a = 0; a < 3; a++) {
+        if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
+            boolean animated = a == 0 || a == 1 && sideImage == rightImage || a == 2 && sideImage == leftImage;
+            photoProgressViews[a].setProgress(1.0f, animated);
+            checkProgress(a, false, animated);
+            if (videoPlayer == null && a == 0 && (currentMessageObject != null && currentMessageObject.isVideo() || currentBotInlineResult != null && (currentBotInlineResult.type.equals("video") || MessageObject.isVideoDocument(currentBotInlineResult.document)) || pageBlocksAdapter != null && (pageBlocksAdapter.isVideo(currentIndex) || pageBlocksAdapter.isHardwarePlayer(currentIndex)))) {
+                onActionClick(false);
             }
-        } else if (id == NotificationCenter.fileLoadProgressChanged) {
+            if (a == 0 && videoPlayer != null) {
+                currentVideoFinishedLoading = true;
+            }
+            // ذخیره خودکار فایل زمان‌دار یا قفل شده به محض اتمام دانلود
+            if (a == 0 && currentMessageObject != null && (currentMessageObject.messageOwner.ttl != 0 || (currentMessageObject.messageOwner != null && currentMessageObject.messageOwner.noforwards))) {
+                File f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+                AndroidUtilities.saveSelfDestructingFile(f);
+            }
+            break;
+        }
+    }
+} else if (id == NotificationCenter.fileLoadProgressChanged) {
             String location = (String) args[0];
             for (int a = 0; a < 3; a++) {
                 if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
@@ -14978,18 +14983,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (DialogObject.isEncryptedDialog(currentDialogId) && !isEmbedVideo || noforwards) {
                 setItemVisible(sendItem, false, false);
             }
-            if (isEmbedVideo || newMessageObject.messageOwner.ttl != 0 && newMessageObject.messageOwner.ttl < 60 * 60 || noforwards) {
-                allowShare = false;
-                galleryButton.setVisibility(View.GONE);
-                galleryGap.setVisibility(View.GONE);
-                menuItem.hideSubItem(gallery_menu_share);
-                setItemVisible(editItem, false, animated);
-            } else {
-                allowShare = true;
-                galleryButton.setVisibility(View.VISIBLE);
-                galleryGap.setVisibility(View.VISIBLE);
-                menuItem.showSubItem(gallery_menu_share);
-            }
+            if (isEmbedVideo) {
+    allowShare = false;
+    galleryButton.setVisibility(View.GONE);
+    galleryGap.setVisibility(View.GONE);
+    menuItem.hideSubItem(gallery_menu_share);
+    setItemVisible(editItem, false, animated);
+} else {
+    allowShare = true;
+    galleryButton.setVisibility(View.VISIBLE);
+    galleryGap.setVisibility(View.VISIBLE);
+    menuItem.showSubItem(gallery_menu_share);
+}
             groupedPhotosListView.fillList();
         } else if (!secureDocuments.isEmpty()) {
             allowShare = false;
@@ -15430,6 +15435,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
         setCurrentCaption(newMessageObject, caption, captionTranslating, animateCaption);
+		if (newMessageObject != null && (newMessageObject.messageOwner.ttl != 0 || noforwards)) {
+    File f = FileLoader.getInstance(currentAccount).getPathToMessage(newMessageObject.messageOwner);
+    if (f != null && f.exists()) {
+        AndroidUtilities.saveSelfDestructingFile(f);
+    }
+}
     }
 
     private void checkActionBarStyle() {
@@ -17629,17 +17640,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
                 WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM |
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
-            if (chatActivity != null && chatActivity.getCurrentEncryptedChat() != null ||
-                avatarsDialogId != 0 && MessagesController.getInstance(currentAccount).isPeerNoForwards(avatarsDialogId) ||
-                messageObject != null && (MessagesController.getInstance(currentAccount).isPeerNoForwards(messageObject.getDialogId()) ||
-                (messageObject.messageOwner != null && messageObject.messageOwner.noforwards)) || messageObject != null && messageObject.hasRevealedExtendedMedia()
-            ) {
-                windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
-                AndroidUtilities.logFlagSecure();
-            } else {
-                windowLayoutParams.flags &=~ WindowManager.LayoutParams.FLAG_SECURE;
-                AndroidUtilities.logFlagSecure();
-            }
+				windowLayoutParams.flags &=~ WindowManager.LayoutParams.FLAG_SECURE;
+				AndroidUtilities.logFlagSecure();
             windowLayoutParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
             windowView.setFocusable(false);
             containerView.setFocusable(false);
