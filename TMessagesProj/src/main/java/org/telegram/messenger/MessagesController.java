@@ -1564,7 +1564,7 @@ public class MessagesController extends BaseController implements NotificationCe
         youtubePipType = mainPreferences.getString("youtubePipType", "disabled");
         keepAliveService = mainPreferences.getBoolean("keepAliveService", false);
         backgroundConnection = mainPreferences.getBoolean("keepAliveService", false);
-        promoDialogId = 0);
+        promoDialogId = 0;
         nextPromoInfoCheckTime = mainPreferences.getInt("nextPromoInfoCheckTime", 0);
         promoDialogType = mainPreferences.getInt("promo_dialog_type", 0);
         promoPsaMessage = mainPreferences.getString("promo_psa_message", null);
