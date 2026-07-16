@@ -878,10 +878,11 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         actionBar.setTitleRightMargin(dp(70));
         containerView.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         
-        // ایجاد منوی سه نقطه و گزینه بومی ذخیره در گالری تلگرام
+        // ایجاد منوی سه نقطه و اضافه کردن گزینه‌های ذخیره و فوروارد پیشرفته
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
         org.telegram.ui.ActionBar.ActionBarMenuItem menuItem = menu.addItem(1, R.drawable.media_more);
         menuItem.addSubItem(2, R.drawable.msg_gallery, LocaleController.getString("SaveToGallery", R.string.SaveToGallery));
+        menuItem.addSubItem(3, R.drawable.msg_header_share, LocaleController.getString("ShareFile", R.string.ShareFile)); // فوروارد بدون محدودیت
         
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -910,10 +911,65 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
                         }
                         
                         if (f != null && f.exists()) {
-                            // ذخیره رسمی فایل در گالری و نمایش اعلان گرافیکی موفقیت‌آمیز بودن
                             MediaController.saveFile(f.toString(), parentActivity, isVideo ? 1 : 0, null, null, uri -> {
                                 BulletinFactory.createSaveToGalleryBulletin(containerView, isVideo, 0xf9222222, 0xffffffff).show();
                             });
+                        } else {
+                            Toast.makeText(parentActivity, "File is not downloaded completely", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Throwable e) {
+                        FileLog.e(e);
+                    }
+                } else if (id == 3) {
+                    // فرآیند فوروارد پیشرفته و بدون محدودیت به عنوان رسانه جدید
+                    try {
+                        File f = null;
+                        TLRPC.Document document = currentMessageObject.getDocument();
+                        if (document != null) {
+                            f = new File(currentMessageObject.messageOwner.attachPath);
+                            if (!f.exists()) {
+                                f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+                                File encryptedFile = new File(f.getAbsolutePath() + ".enc");
+                                if (encryptedFile.exists()) {
+                                    f = encryptedFile;
+                                }
+                            }
+                        } else {
+                            TLRPC.PhotoSize sizeFull = FileLoader.getClosestPhotoSizeWithSize(currentMessageObject.photoThumbs, AndroidUtilities.getPhotoSize());
+                            if (sizeFull != null) {
+                                f = FileLoader.getInstance(currentAccount).getPathToAttach(sizeFull, true);
+                            }
+                        }
+                        
+                        if (f != null && f.exists()) {
+                            final File finalFile = f;
+                            Bundle args = new Bundle();
+                            args.putBoolean("onlySelect", true);
+                            args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
+                            DialogsActivity dialogsActivity = new DialogsActivity(args);
+                            dialogsActivity.setDelegate((fragment, dids, message1, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+                                long did = dids.get(0).dialogId;
+                                
+                                // ارسال فایل کپی شده به صورت یک رسانه کاملاً جدید برای دور زدن فیلترهای تلگرام
+                                if (isVideo) {
+                                    ArrayList<String> paths = new ArrayList<>();
+                                    paths.add(finalFile.toString());
+                                    SendMessagesHelper.prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, null, null, did, null, null, null, null, null, notify, scheduleDate, null, null, 0, 0, false, 0);
+                                } else {
+                                    ArrayList<SendMessagesHelper.SendingMediaInfo> paths = new ArrayList<>();
+                                    SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
+                                    info.path = finalFile.toString();
+                                    paths.add(info);
+                                    SendMessagesHelper.prepareSendingMedia(AccountInstance.getInstance(currentAccount), paths, did, null, null, null, null, false, false, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, 0, false, 0, 0, null);
+                                }
+                                
+                                fragment.finishFragment();
+                                closePhoto(true, false);
+                                return true;
+                            });
+                            
+                            closePhoto(false, false);
+                            LaunchActivity.instance.presentFragment(dialogsActivity);
                         } else {
                             Toast.makeText(parentActivity, "File is not downloaded completely", Toast.LENGTH_SHORT).show();
                         }
