@@ -877,11 +877,49 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setTitleRightMargin(dp(70));
         containerView.addView(actionBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        
+        // ایجاد منوی سه نقطه و گزینه بومی ذخیره در گالری تلگرام
+        org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
+        org.telegram.ui.ActionBar.ActionBarMenuItem menuItem = menu.addItem(1, R.drawable.media_more);
+        menuItem.addSubItem(2, R.drawable.msg_gallery, LocaleController.getString("SaveToGallery", R.string.SaveToGallery));
+        
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     closePhoto(true, false);
+                } else if (id == 2) {
+                    // فرآیند استخراج فایل و ذخیره‌سازی رسمی در گالری
+                    try {
+                        File f = null;
+                        TLRPC.Document document = currentMessageObject.getDocument();
+                        if (document != null) {
+                            f = new File(currentMessageObject.messageOwner.attachPath);
+                            if (!f.exists()) {
+                                f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+                                File encryptedFile = new File(f.getAbsolutePath() + ".enc");
+                                if (encryptedFile.exists()) {
+                                    f = encryptedFile;
+                                }
+                            }
+                        } else {
+                            TLRPC.PhotoSize sizeFull = FileLoader.getClosestPhotoSizeWithSize(currentMessageObject.photoThumbs, AndroidUtilities.getPhotoSize());
+                            if (sizeFull != null) {
+                                f = FileLoader.getInstance(currentAccount).getPathToAttach(sizeFull, true);
+                            }
+                        }
+                        
+                        if (f != null && f.exists()) {
+                            // ذخیره رسمی فایل در گالری و نمایش اعلان گرافیکی موفقیت‌آمیز بودن
+                            MediaController.saveFile(f.toString(), parentActivity, isVideo ? 1 : 0, null, null, uri -> {
+                                BulletinFactory.createSaveToGalleryBulletin(containerView, isVideo, 0xf9222222, 0xffffffff).show();
+                            });
+                        } else {
+                            Toast.makeText(parentActivity, "File is not downloaded completely", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Throwable e) {
+                        FileLog.e(e);
+                    }
                 }
             }
         });
