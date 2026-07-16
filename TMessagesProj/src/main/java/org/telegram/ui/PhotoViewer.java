@@ -15065,13 +15065,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 title = getString(R.string.AttachPhoto);
             }
             final boolean noforwards = avatarsDialogId != 0 && MessagesController.getInstance(currentAccount).isPeerNoForwards(avatarsDialogId);
-            if (noforwards) {
-                galleryButton.setVisibility(View.GONE);
-                galleryGap.setVisibility(View.GONE);
-            } else {
                 galleryButton.setVisibility(View.VISIBLE);
-                galleryGap.setVisibility(View.VISIBLE);
-            }
+                galleryGap.setVisibility(View.VISIBLE);         
             allowShare = !noforwards;
             menuItem.showSubItem(gallery_menu_share);
             menuItem.checkHideMenuItem();
@@ -17647,12 +17642,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
 				windowLayoutParams.flags &=~ WindowManager.LayoutParams.FLAG_SECURE;
 				AndroidUtilities.logFlagSecure();
+				if (parentActivity != null) {
+                parentActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            }
             windowLayoutParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
             windowView.setFocusable(false);
             containerView.setFocusable(false);
             wm.addView(windowView, windowLayoutParams);
             onShowView();
-
+			
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 final OnBackInvokedDispatcher dispatcher = windowView.findOnBackInvokedDispatcher();
                 if (dispatcher != null) {
