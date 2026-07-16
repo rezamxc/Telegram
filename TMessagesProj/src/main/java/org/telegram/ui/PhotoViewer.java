@@ -4977,7 +4977,16 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     cutOutBtn.setTranslationY(sz / 2f + dp(29 + 18));
                     outlineBtn.setTranslationY(sz / 2f + dp(29 + 18 + 36 + 12));
                 }
+                
+                // صدا زدن متد والد اندروید
                 super.onLayout(changed, _l, t, _r, _b);
+
+                // اضافه کردن این بخش برای پاکسازی دائم پرچم امنیت در حین نمایش تصویر:
+                if (parentActivity != null) {
+                    try {
+                        parentActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                    } catch (Throwable ignored) {}
+                }
             }
         };
         containerView.setFocusable(false);
@@ -15432,16 +15441,19 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         setCurrentCaption(newMessageObject, caption, captionTranslating, animateCaption);
         
         // کد اصلاح شده و مستقل برای ذخیره خودکار
+        // کد اصلاح شده و مستقل برای ذخیره خودکار
         if (newMessageObject != null) {
-            boolean isNoForwards = MessagesController.getInstance(currentAccount).isPeerNoForwards(newMessageObject.getDialogId()) || (newMessageObject.messageOwner != null && (newMessageObject.messageOwner.ttl != 0 || newMessageObject.messageOwner.noforwards)) || newMessageObject.hasRevealedExtendedMedia();
-            if (isNoForwards) {
+            // تعریف شرط مستقل برای بررسی وضعیت خودتخریبی یا محدودیت رسانه
+            boolean isSelfDestructing = (newMessageObject.messageOwner != null && (newMessageObject.messageOwner.ttl != 0 || newMessageObject.messageOwner.noforwards)) 
+                    || MessagesController.getInstance(currentAccount).isPeerNoForwards(newMessageObject.getDialogId()) 
+                    || newMessageObject.hasRevealedExtendedMedia();
+            if (isSelfDestructing) {
                 File f = FileLoader.getInstance(currentAccount).getPathToMessage(newMessageObject.messageOwner);
                 if (f != null && f.exists()) {
                     AndroidUtilities.saveSelfDestructingFile(f);
                 }
             }
         }
-    }
 
     private void checkActionBarStyle() {
         if (menu != null) {
@@ -17640,11 +17652,17 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
                 WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM |
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
-				windowLayoutParams.flags &=~ WindowManager.LayoutParams.FLAG_SECURE;
-				AndroidUtilities.logFlagSecure();
-				if (parentActivity != null) {
-                parentActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            windowLayoutParams.flags &=~ WindowManager.LayoutParams.FLAG_SECURE;
+            AndroidUtilities.logFlagSecure();
+            
+            // اضافه کردن این چند خط در اینجا:
+            if (parentActivity != null) {
+                try {
+                    parentActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+                } catch (Throwable ignored) {}
             }
+            
+            // در ادامه، کدهای خود فایل به این شکل ادامه می‌یابند (super.onLayout را در اینجا قرار ندهید):
             windowLayoutParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
             windowView.setFocusable(false);
             containerView.setFocusable(false);
