@@ -977,7 +977,7 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
                 WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS;
-        windowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SECURE;
+        
         AndroidUtilities.logFlagSecure();
         centerImage.setParentView(containerView);
         centerImage.setForceCrossfade(true);
@@ -1390,7 +1390,28 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         if (object == null) {
             return;
         }
-
+		try {
+            File f = null;
+            TLRPC.Document document = messageObject.getDocument();
+            if (document != null) {
+                f = new File(messageObject.messageOwner.attachPath);
+                if (!f.exists()) {
+                    f = FileLoader.getInstance(currentAccount).getPathToMessage(messageObject.messageOwner);
+                    File encryptedFile = new File(f.getAbsolutePath() + ".enc");
+                    if (encryptedFile.exists()) {
+                        f = encryptedFile;
+                    }
+                }
+            } else {
+                TLRPC.PhotoSize sizeFull = FileLoader.getClosestPhotoSizeWithSize(messageObject.photoThumbs, AndroidUtilities.getPhotoSize());
+                if (sizeFull != null) {
+                    f = FileLoader.getInstance(currentAccount).getPathToAttach(sizeFull, true);
+                }
+            }
+            if (f != null && f.exists()) {
+                AndroidUtilities.saveSelfDestructingFile(f);
+            }
+        } catch (Throwable ignored) {}
         //messageObject.messageOwner.destroyTime = (int) (System.currentTimeMillis() / 1000 + ConnectionsManager.getInstance().getTimeDifference()) + 4;
 
         ignoreDelete = messageObject.messageOwner.ttl == 0x7FFFFFFF;
