@@ -108,7 +108,13 @@ import org.telegram.ui.Components.VideoPlayer;
 import org.telegram.ui.Components.VideoPlayerSeekBar;
 import org.telegram.ui.Stories.DarkThemeResourceProvider;
 import org.telegram.ui.Stories.recorder.HintView2;
-
+import android.os.Bundle;
+import android.widget.Toast;
+import org.telegram.messenger.MediaController;
+import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.ui.Components.BulletinFactory;
+import org.telegram.ui.DialogsActivity;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
