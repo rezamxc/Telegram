@@ -927,28 +927,12 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
                         FileLog.e(e);
                     }
                 } else if (id == 3) {
-                    // فرآیند فوروارد پیشرفته و بدون محدودیت به عنوان رسانه جدید
+                    // فرآیند فوروارد پیشرفته و بدون محدودیت (هوشمند و دوگانه)
                     try {
-                        File f = null;
-                        TLRPC.Document document = currentMessageObject.getDocument();
-                        if (document != null) {
-                            f = new File(currentMessageObject.messageOwner.attachPath);
-                            if (!f.exists()) {
-                                f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
-                                File encryptedFile = new File(f.getAbsolutePath() + ".enc");
-                                if (encryptedFile.exists()) {
-                                    f = encryptedFile;
-                                }
-                            }
-                        } else {
-                            TLRPC.PhotoSize sizeFull = FileLoader.getClosestPhotoSizeWithSize(currentMessageObject.photoThumbs, AndroidUtilities.getPhotoSize());
-                            if (sizeFull != null) {
-                                f = FileLoader.getInstance(currentAccount).getPathToAttach(sizeFull, true);
-                            }
-                        }
+                        boolean isSecret = org.telegram.messenger.DialogObject.isEncryptedDialog(currentDialogId);
                         
-                        if (f != null && f.exists()) {
-                            final File finalFile = f;
+                        if (!isSecret) {
+                            // ۱. پی‌وی عادی (ابری): ارسال کپی ابری به صورت کاملاً آنی (بدون آپلود و بدون دانلود!)
                             Bundle args = new Bundle();
                             args.putBoolean("onlySelect", true);
                             args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
@@ -956,18 +940,11 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
                             dialogsActivity.setDelegate((fragment, dids, message1, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
                                 long did = dids.get(0).dialogId;
                                 
-                                // ارسال فایل کپی شده به صورت یک رسانه کاملاً جدید برای دور زدن فیلترهای تلگرام
-                                if (isVideo) {
-                                    ArrayList<String> paths = new ArrayList<>();
-                                    paths.add(finalFile.toString());
-                                    SendMessagesHelper.prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, null, null, did, null, null, null, null, null, notify, scheduleDate, null, null, 0, 0, false, 0);
-                                } else {
-                                    ArrayList<SendMessagesHelper.SendingMediaInfo> paths = new ArrayList<>();
-                                    SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
-                                    info.path = finalFile.toString();
-                                    paths.add(info);
-                                    SendMessagesHelper.prepareSendingMedia(AccountInstance.getInstance(currentAccount), paths, did, null, null, null, null, false, false, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, 0, false, 0, 0, null);
-                                }
+                                ArrayList<MessageObject> fmessages = new ArrayList<>();
+                                fmessages.add(currentMessageObject);
+                                
+                                // با قرار دادن پارامتر پنجم (asForward) روی مقدار false، تلگرام مدیا را در سرور کپی کرده و به صورت فایل جدید می‌فرستد
+                                SendMessagesHelper.getInstance(currentAccount).sendMessage(fmessages, did, false, false, false, scheduleDate, scheduleRepeatPeriod);
                                 
                                 fragment.finishFragment();
                                 closePhoto(true, false);
@@ -977,7 +954,55 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
                             closePhoto(false, false);
                             LaunchActivity.instance.presentFragment(dialogsActivity);
                         } else {
-                            Toast.makeText(parentActivity, "File is not downloaded completely", Toast.LENGTH_SHORT).show();
+                            // ۲. چت مخفی (E2EE): به دلیل امنیت سرتاسر، فایل باید ابتدا دانلود شده و مجدداً آپلود شود
+                            File f = null;
+                            TLRPC.Document document = currentMessageObject.getDocument();
+                            if (document != null) {
+                                f = new File(currentMessageObject.messageOwner.attachPath);
+                                if (!f.exists()) {
+                                    f = FileLoader.getInstance(currentAccount).getPathToMessage(currentMessageObject.messageOwner);
+                                    File encryptedFile = new File(f.getAbsolutePath() + ".enc");
+                                    if (encryptedFile.exists()) {
+                                        f = encryptedFile;
+                                    }
+                                }
+                            } else {
+                                TLRPC.PhotoSize sizeFull = FileLoader.getClosestPhotoSizeWithSize(currentMessageObject.photoThumbs, AndroidUtilities.getPhotoSize());
+                                if (sizeFull != null) {
+                                    f = FileLoader.getInstance(currentAccount).getPathToAttach(sizeFull, true);
+                                }
+                            }
+                            if (f != null && f.exists()) {
+                                final File finalFile = f;
+                                Bundle args = new Bundle();
+                                args.putBoolean("onlySelect", true);
+                                args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_FORWARD);
+                                DialogsActivity dialogsActivity = new DialogsActivity(args);
+                                dialogsActivity.setDelegate((fragment, dids, message1, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+                                    long did = dids.get(0).dialogId;
+                                    
+                                    if (isVideo) {
+                                        ArrayList<String> paths = new ArrayList<>();
+                                        paths.add(finalFile.toString());
+                                        SendMessagesHelper.prepareSendingDocuments(AccountInstance.getInstance(currentAccount), paths, paths, null, null, null, did, null, null, null, null, null, notify, scheduleDate, null, null, 0, 0, false, 0);
+                                    } else {
+                                        ArrayList<SendMessagesHelper.SendingMediaInfo> paths = new ArrayList<>();
+                                        SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
+                                        info.path = finalFile.toString();
+                                        paths.add(info);
+                                        SendMessagesHelper.prepareSendingMedia(AccountInstance.getInstance(currentAccount), paths, did, null, null, null, null, false, false, null, notify, scheduleDate, scheduleRepeatPeriod, 0, false, null, null, 0, 0, false, 0, 0, null);
+                                    }
+                                    
+                                    fragment.finishFragment();
+                                    closePhoto(true, false);
+                                    return true;
+                                });
+                                
+                                closePhoto(false, false);
+                                LaunchActivity.instance.presentFragment(dialogsActivity);
+                            } else {
+                                Toast.makeText(parentActivity, "File is not downloaded completely", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     } catch (Throwable e) {
                         FileLog.e(e);
