@@ -15452,7 +15452,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
         }
-
+	}
     private void checkActionBarStyle() {
         if (menu != null) {
             menu.setTranslationX(sendPhotoTypeIsPollMediaEdit ? -dp(4) : 0);
