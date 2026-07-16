@@ -64,17 +64,14 @@ public class FlagSecureReason {
             return;
         }
 
-        if (isSecuredNow(window)) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            AndroidUtilities.logFlagSecure();
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            AndroidUtilities.logFlagSecure();
-        }
+        // اصلاح شده: به جای اعمال پرچم امنیت، آن را در هر بار آپدیت کاملاً پاک می‌کنیم
+        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        AndroidUtilities.logFlagSecure();
     }
 
     public static boolean isSecuredNow(Window window) {
-        return currentSecureReasons != null && currentSecureReasons.get(window) != null;
+        // اصلاح شده: همیشه مقدار false برگردانده شود تا امنیت در هیچ کجای برنامه قفل نشود
+        return false;
     }
 
     public interface FlagSecureCondition {

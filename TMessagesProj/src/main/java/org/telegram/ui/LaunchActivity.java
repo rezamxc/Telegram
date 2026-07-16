@@ -431,8 +431,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
         }
         getWindow().setBackgroundDrawableResource(R.drawable.transparent);
+		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         flagSecureReason = new FlagSecureReason(getWindow(), () -> false);
-        flagSecureReason.attach();
+        
 
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= 24) {
