@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+# اضافه کردن دسترسی برای ایجاد ریلیز در مخزن
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,8 +34,19 @@ jobs:
         run: |
           ./gradlew :TMessagesProj_AppHuawei:assembleAfatDebug --stacktrace
 
-      - name: Upload APK
+      - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-debug-apk
           path: TMessagesProj_AppHuawei/build/outputs/apk/**/*.apk
+
+      # مرحله جدید جهت انتشار خودکار در صفحه Releases گیت‌هاب
+      - name: Release APK on GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "build-${{ github.run_number }}"
+          name: "Telegram Debug Build #${{ github.run_number }}"
+          body: "نسخه دیباگ تلگرام که به صورت خودکار پس از پوش در شاخه master ساخته شده است."
+          draft: false
+          prerelease: false
+          files: TMessagesProj_AppHuawei/build/outputs/apk/**/*.apk
