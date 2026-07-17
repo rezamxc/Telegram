@@ -89,11 +89,10 @@
     <queries>
         <package android:name="com.google.android.apps.maps"/>
         <intent>
-            <intent>
-                <action android:name="android.intent.action.VIEW"/>
-                <data android:scheme="ton"/>
-            </intent>
-        </queries>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="ton"/>
+        </intent>
+    </queries>
 
     <application
         android:name="org.telegram.messenger.ApplicationLoader"
