@@ -227,7 +227,7 @@ android {
         }
     }
 
-    namespace 'org.telegram.messenger'
+    namespace 'com.nigram.messenger'
 }
 
 
